@@ -119,9 +119,26 @@ const runMigrations = async () => {
   }
 };
 
+// CORS: allow a whitelist of frontend origins (use FRONTEND_URL env or add deploy domains)
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://afiafoodjoint.netlify.app',
+  'https://your-frontend-domain.example.com',
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow non-browser tools (curl, Postman) with no origin
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    }
+    return callback(new Error('CORS policy: origin not allowed'));
+  },
   credentials: true,
+  optionsSuccessStatus: 204,
 }));
 app.use(express.json());
 app.use(cookieParser());
