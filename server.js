@@ -120,13 +120,19 @@ const runMigrations = async () => {
 };
 
 // CORS: allow a whitelist of frontend origins (use FRONTEND_URL env or add deploy domains)
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
+// Support comma-separated FRONTEND_URL (e.g. "https://a.example.com, https://b.example.com")
+const envFrontend = process.env.FRONTEND_URL || '';
+const configuredOrigins = envFrontend
+  .split(',')
+  .map((s) => s && s.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([
+  ...configuredOrigins,
   'http://localhost:3000',
   'http://localhost:3001',
   'https://afiafoodjoint.netlify.app',
-  'https://your-frontend-domain.example.com',
-].filter(Boolean);
+]));
 
 app.use(cors({
   origin: function (origin, callback) {
