@@ -9,6 +9,7 @@ const menuRoutes = require('./routes/menu');
 const orderRoutes = require('./routes/orders');
 const adminRoutes = require('./routes/admin');
 const promoRoutes = require('./routes/promos');
+const createAdmin = require('./scripts/createAdmin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -166,6 +167,7 @@ app.use((err, req, res, next) => {
 
 const start = async () => {
   await runMigrations();
+  await createAdmin({ closePool: false });
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
   });

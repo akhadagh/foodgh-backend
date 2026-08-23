@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const bcrypt = require('bcryptjs');
 
-const createAdmin = async () => {
+const createAdmin = async ({ closePool = true } = {}) => {
   const client = await pool.connect();
 
   try {
@@ -12,11 +12,7 @@ const createAdmin = async () => {
     const existing = await client.query('SELECT id FROM users WHERE email = $1', [email]);
 
     if (existing.rows.length > 0) {
-      await client.query(
-        'UPDATE users SET name = $1, password = $2, phone = $3, role = $4, updated_at = CURRENT_TIMESTAMP WHERE email = $5',
-        ['Admin', hashedPassword, '+233200000000', 'admin', email]
-      );
-      console.log('Updated existing admin user:', email);
+      console.log('Admin user already exists:', email);
     } else {
       await client.query(
         'INSERT INTO users (name, email, password, phone, role) VALUES ($1, $2, $3, $4, $5)',
@@ -31,8 +27,16 @@ const createAdmin = async () => {
     process.exitCode = 1;
   } finally {
     client.release();
-    await pool.end();
+    if (closePool) {
+      await pool.end();
+    }
   }
 };
 
-createAdmin();
+if (require.main === module) {
+  createAdmin().catch(() => {
+    process.exitCode = 1;
+  });
+}
+
+module.exports = createAdmin;
